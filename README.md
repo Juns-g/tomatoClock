@@ -1,7 +1,32 @@
-# Vue 3 + Vite
+# 番茄钟
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
 
-## Recommended IDE Setup
 
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).
+## 需求
+
+比较乱，随手写的，可以自行整理
+
+- 专注x分钟，休息y分钟
+
+- x，y可以选择并且也可以手动输入
+
+- 每1个番茄钟有一个短休息，4个有一个长休息
+
+- 时钟显示样式要多种可以选
+
+- 要有浅色和深色模式
+
+- 专注结束和休息结束都要有提醒
+
+- 提醒可以选择带不带声音
+
+- 统计功能：每日专注和休息的次数+时间，单位是min
+
+- 暂停与恢复，还有停止
+
+- 锦上添花
+
+	- 任务卡片（感觉不做可以的，因为就是轻量简洁的就可以）
+	- 正计时倒计时
+
+	

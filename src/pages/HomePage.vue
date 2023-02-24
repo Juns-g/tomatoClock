@@ -33,6 +33,7 @@
         >
           秒 转 时分秒
         </el-button>
+        <n-button>naive-ui</n-button>
       </div>
       <div class="inputBox">
         <el-input-number v-model="clock.hour" size="large" :min="0" :max="24" />
@@ -56,6 +57,7 @@
 
 <script setup>
 import { computed, reactive } from "vue";
+import { NButton } from "naive-ui";
 
 let clock = reactive({
   hour: 0,

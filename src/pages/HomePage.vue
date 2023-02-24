@@ -12,8 +12,12 @@
         <el-button type="success" size="large" round @click="start()">
           开 始
         </el-button>
-        <el-button type="success" size="large" round> 暂 停 </el-button>
-        <el-button type="success" size="large" round> 继 续 </el-button>
+        <el-button type="success" size="large" round @click="pauseTimer()">
+          暂 停
+        </el-button>
+        <el-button type="success" size="large" round @click="start()">
+          继 续
+        </el-button>
         <el-button type="success" size="large" round @click="clear()">
           重 置
         </el-button>
@@ -116,25 +120,33 @@ function totalTime2time(totalTime) {
 }
 
 function start() {
-  clear();
+  console.log("start清除了定时器");
+  clearInterval(clock.timer);
   //   var timeStart =
   clock.timer = setInterval(countdown, 1000);
   // const timer = setInterval(countdown(), 1000);
   //   timeStart;
-  console.log("clock.totalTime :>> ", clock.totalTime);
+  console.log("start运行了，总时间是 :>> ", clock.totalTime);
 }
 
 function clear() {
-  //   clearInterval(timeStart);
-  console.log("清除了倒计时");
+  clearInterval(clock.timer);
+  console.log("clear清除了定时器 :>> ", clock.timer);
+  clock.totalTime = 0;
+  console.log("总时间清零了 :>> ", clock.totalTime);
+}
+
+function pauseTimer() {
+  console.log("pause清除了定时器");
+  clearInterval(clock.timer);
 }
 
 function test() {
   clock.minute--;
-  clock.totalTime = time2TotalTime(clock.hour, clock.minute, clock.second);
   console.log(clock);
 }
 
+// 判断定时器是否存在
 function isTimerExist() {
   if (clock.timer) console.log("timer :>> ", clock.timer);
   else console.log("timer没了", clock.timer);
@@ -148,10 +160,7 @@ function pad(time) {
 // 倒计时逻辑
 function countdown() {
   if (clock.totalTime < 1 && clock.timer) {
-    console.log("清除了定时器 :>> ", clock.timer);
-    clearInterval(clock.timer);
-    console.log("总时间清零了 :>> ", clock.totalTime);
-
+    clear();
     // TODO 停止了，处理一下
     // if 休息状态到时间了
     // if 工作状态到时间了

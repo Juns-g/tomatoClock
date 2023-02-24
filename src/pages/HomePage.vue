@@ -6,7 +6,8 @@
         <!-- ! 一次学1h及以上是不正确的 -->
         <!-- <h1>{{ clock.hour }}:{{ clock.minute }}:{{ clock.second }}</h1> -->
         <h1>{{ clock.minute }}:{{ clock.second }}</h1>
-        <h1>{{ clock.totalTime }}</h1>
+        <!-- TODO 总时间，之后删了 -->
+        <h1>{{ clock.workTotalTime }}</h1>
       </div>
       <div class="buttonBox">
         <el-button type="success" size="large" round @click="start()">
@@ -21,11 +22,13 @@
         <el-button type="success" size="large" round @click="clear()">
           重 置
         </el-button>
-        <el-button type="warning" size="large" round @click="test()">
+        <!-- <el-button type="warning" size="large" round @click="test()">
           测试
         </el-button>
 
-        <n-button @click="isTimerExist()">定时器存在吗？</n-button>
+        <n-button type="warning" secondary round @click="isTimerExist()"
+          >定时器存在吗？</n-button
+        > -->
       </div>
       <div class="inputBox">
         <!-- ! 一次学1h及以上是不正确的 -->
@@ -36,16 +39,17 @@
           :max="24"
         /> -->
         <el-input-number
-          v-model="clock.minuteInput"
+          v-model="clock.workMinuteInput"
           size="large"
           :min="0"
           :max="60"
         />
+        <!-- 最多休息半小时 -->
         <el-input-number
-          v-model="clock.secondInput"
+          v-model="clock.breakMinuteInput"
           size="large"
           :min="0"
-          :max="60"
+          :max="30"
         />
       </div>
     </div>
@@ -62,58 +66,77 @@ let clock = reactive({
   minute: 0,
   second: 0,
   // 输入的时间
-  hourInput: 0,
-  minuteInput: 0,
-  secondInput: 0,
-  totalTime: 0,
+  // hourInput: 0,
+  // 一次专注只准你多少分钟
+  workMinuteInput: 0,
+  breakMinuteInput: 0,
+  // secondInput: 0,
+  workTotalTime: 0,
+  breakTotalTIme: 0,
   title: "开始专注吧",
+  text: [
+    "开始专注吧",
+    "继续专注吧",
+    "正在专注中",
+    "到了休息时间了，开始休息吧",
+    "正在休息中",
+    "休息结束了，继续专注吧",
+  ],
   timer: null,
+  noInput: true,
+  breakStatus: false,
 });
 
 // 根据输入的时分秒计算总时间
-watch(
-  [() => clock.hourInput, () => clock.minuteInput, () => clock.secondInput],
+/* watch(
+  [() => clock.hourInput, () => clock.workMinuteInput, () => clock.secondInput],
   (newValue, oldValue) => {
     // console.log("oldValue :>> ", oldValue);
     // console.log("newValue :>> ", newValue);
-    clock.totalTime =
-      clock.hourInput * 3600 + clock.minuteInput * 60 + clock.secondInput;
+    clock.workTotalTime =
+      clock.hourInput * 3600 + clock.workMinuteInput * 60 + clock.secondInput;
   }
-);
+); */
+
+// 根据输入的分钟计算总时间
+watch([() => clock.workMinuteInput, () => clock.breakMinuteInput], () => {
+  // console.log("oldValue :>> ", oldValue);
+  // console.log("newValue :>> ", newValue);
+  clock.workTotalTime = clock.workMinuteInput * 60;
+  clock.breakTotalTime = clock.breakMinuteInput * 60;
+});
 
 // 根据总时间计算出显示的时间
 watch(
-  () => clock.totalTime,
+  () => clock.workTotalTime,
   (newValue, oldValue) => {
     // console.log("oldValue :>> ", oldValue);
     // console.log("newValue :>> ", newValue);
-    clock.hour = Math.floor(clock.totalTime / 3600);
-    clock.minute = Math.floor(clock.totalTime / 60) % 60;
-    clock.second = pad(clock.totalTime % 60);
+    clock.hour = Math.floor(clock.workTotalTime / 3600);
+    clock.minute = Math.floor(clock.workTotalTime / 60) % 60;
+    clock.second = pad(clock.workTotalTime % 60);
   }
 );
 
+// 监视输入的分钟，秒的话不给改
+watch;
+
 // 使用如下的计算属性会导致一开始不显示数字，还不知道why
 /* clock.hour = computed(() => {
-  Math.floor(clock.totalTime / 3600);
+  Math.floor(clock.workTotalTime / 3600);
 });
 clock.minute = computed(() => {
-  Math.floor(clock.totalTime / 60) % 60;
+  Math.floor(clock.workTotalTime / 60) % 60;
 });
 clock.second = computed(() => {
-  clock.totalTime % 60;
+  clock.workTotalTime % 60;
 }); */
 
-// 时分秒 转 秒
-function time2TotalTime(hour, minute, second) {
-  return hour * 3600 + minute * 60 + second;
-}
-
 // 秒 转 时分秒
-function totalTime2time(totalTime) {
-  let hour = Math.floor(totalTime / 3600);
-  let minute = Math.floor(totalTime / 60) % 60;
-  let second = totalTime % 60;
+function workTotalTime2time(workTotalTime) {
+  let hour = Math.floor(workTotalTime / 3600);
+  let minute = Math.floor(workTotalTime / 60) % 60;
+  let second = workTotalTime % 60;
   clock.hour = hour;
   clock.minute = minute;
   clock.second = second;
@@ -122,28 +145,43 @@ function totalTime2time(totalTime) {
 function start() {
   console.log("start清除了定时器");
   clearInterval(clock.timer);
-  //   var timeStart =
   clock.timer = setInterval(countdown, 1000);
-  // const timer = setInterval(countdown(), 1000);
-  //   timeStart;
-  console.log("start运行了，总时间是 :>> ", clock.totalTime);
+  if (clock.workTotalTime) {
+    clock.title = clock.text[2];
+  }
+  console.log("start运行了，总时间是 :>> ", clock.workTotalTime);
 }
 
 function clear() {
   clearInterval(clock.timer);
   console.log("clear清除了定时器 :>> ", clock.timer);
-  clock.totalTime = 0;
-  console.log("总时间清零了 :>> ", clock.totalTime);
+  clock.workTotalTime = 0;
+  console.log("总时间清零了 :>> ", clock.workTotalTime);
+  clock.title = clock.text[0];
 }
 
 function pauseTimer() {
   console.log("pause清除了定时器");
   clearInterval(clock.timer);
+  clock.title = clock.text[1];
 }
 
 function test() {
   clock.minute--;
   console.log(clock);
+}
+
+// 倒计时逻辑
+function countdown() {
+  if (clock.workTotalTime < 1 && clock.timer) {
+    clear();
+    // TODO 停止了，处理一下
+    // if 休息状态到时间了
+    // if 工作状态到时间了
+  } else {
+    clock.workTotalTime--;
+    console.log("时间在减少 :>> ", clock.workTotalTime);
+  }
 }
 
 // 判断定时器是否存在
@@ -155,19 +193,6 @@ function isTimerExist() {
 // 补零
 function pad(time) {
   return (time < 10 ? "0" : "") + time;
-}
-
-// 倒计时逻辑
-function countdown() {
-  if (clock.totalTime < 1 && clock.timer) {
-    clear();
-    // TODO 停止了，处理一下
-    // if 休息状态到时间了
-    // if 工作状态到时间了
-  } else {
-    clock.totalTime--;
-    console.log("时间在减少 :>> ", clock.totalTime);
-  }
 }
 </script>
 

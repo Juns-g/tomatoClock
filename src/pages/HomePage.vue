@@ -21,7 +21,7 @@
           测试
         </el-button>
 
-        <n-button>naive-ui</n-button>
+        <n-button @click="isTimerExist()">定时器存在吗？</n-button>
       </div>
       <div class="inputBox">
         <!-- ! 一次学1h及以上是不正确的 -->
@@ -61,8 +61,9 @@ let clock = reactive({
   hourInput: 0,
   minuteInput: 0,
   secondInput: 0,
-  totalTime: 1,
+  totalTime: 0,
   title: "开始专注吧",
+  timer: null,
 });
 
 // 根据输入的时分秒计算总时间
@@ -117,7 +118,7 @@ function totalTime2time(totalTime) {
 function start() {
   clear();
   //   var timeStart =
-  const timer = setInterval(() => countdown(), 1000);
+  clock.timer = setInterval(countdown, 1000);
   // const timer = setInterval(countdown(), 1000);
   //   timeStart;
   console.log("clock.totalTime :>> ", clock.totalTime);
@@ -134,6 +135,11 @@ function test() {
   console.log(clock);
 }
 
+function isTimerExist() {
+  if (clock.timer) console.log("timer :>> ", clock.timer);
+  else console.log("timer没了", clock.timer);
+}
+
 // 补零
 function pad(time) {
   return (time < 10 ? "0" : "") + time;
@@ -141,15 +147,18 @@ function pad(time) {
 
 // 倒计时逻辑
 function countdown() {
-  if (clock.totalTime < 1) {
-    clearInterval(timer);
+  if (clock.totalTime < 1 && clock.timer) {
+    console.log("清除了定时器 :>> ", clock.timer);
+    clearInterval(clock.timer);
     console.log("总时间清零了 :>> ", clock.totalTime);
 
     // TODO 停止了，处理一下
     // if 休息状态到时间了
     // if 工作状态到时间了
+  } else {
+    clock.totalTime--;
+    console.log("时间在减少 :>> ", clock.totalTime);
   }
-  clock.totalTime--;
 }
 </script>
 

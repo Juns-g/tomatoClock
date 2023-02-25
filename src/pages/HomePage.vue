@@ -10,22 +10,54 @@
         <h1>{{ clock.workTotalTime }}</h1>
       </div>
       <div class="buttonBox">
-        <el-button type="success" size="large" round @click="start()">
+        <el-button
+        class="startButton"
+
+          type="success"
+          size="large"
+          v-show="!clock.isStart"
+          round
+          @click="start()"
+        >
           开 始
         </el-button>
-        <el-button type="success" size="large" round @click="pauseTimer()">
+        <el-button
+        class="pauseButton"
+
+          type="success"
+          size="large"
+          v-show="!clock.isPause && clock.isStart"
+          round
+          @click="pauseTimer()"
+        >
           暂 停
         </el-button>
-        <el-button type="success" size="large" round @click="start()">
+        <el-button
+        class="continueButton"
+
+          type="success"
+          size="large"
+          v-show="clock.isPause && clock.isStart"
+          round
+          @click="continueTimer()"
+        >
           继 续
         </el-button>
-        <el-button type="success" size="large" round @click="clear()">
+        <el-button
+          class="resetButton"
+         type="success" size="large" round @click="resetTimer()">
           重 置
         </el-button>
-        <!-- <el-button type="warning" size="large" round @click="test()">
+        <!-- <el-button
+          type="warning"
+          size="large"
+          :default="111"
+          round
+          @click="test()"
+        >
           测试
-        </el-button>
-
+        </el-button> -->
+        <!--
         <n-button type="warning" secondary round @click="isTimerExist()"
           >定时器存在吗？</n-button
         > -->
@@ -38,19 +70,27 @@
           :min="0"
           :max="24"
         /> -->
-        <el-input-number
-          v-model="clock.workMinuteInput"
-          size="large"
-          :min="0"
-          :max="60"
-        />
-        <!-- 最多休息半小时 -->
-        <el-input-number
-          v-model="clock.breakMinuteInput"
-          size="large"
-          :min="0"
-          :max="30"
-        />
+        <div class="workButton">
+          <span>专注时间: </span>
+          <el-input-number
+            v-model="clock.workMinuteInput"
+            size="large"
+            :min="0"
+            :max="60"
+          />
+          <span> min </span>
+        </div>
+        <div class="breakButton">
+          <!-- 最多休息半小时 -->
+          <span>休息时间: </span>
+          <el-input-number
+            v-model="clock.breakMinuteInput"
+            size="large"
+            :min="0"
+            :max="30"
+          />
+          <span> min</span>
+        </div>
       </div>
     </div>
   </div>
@@ -85,6 +125,8 @@ let clock = reactive({
   timer: null,
   noInput: true,
   breakStatus: false,
+  isPause: false,
+  isStart: false,
 });
 
 // 根据输入的时分秒计算总时间
@@ -149,6 +191,7 @@ function start() {
   if (clock.workTotalTime) {
     clock.title = clock.text[2];
   }
+  clock.isStart = true;
   console.log("start运行了，总时间是 :>> ", clock.workTotalTime);
 }
 
@@ -164,6 +207,17 @@ function pauseTimer() {
   console.log("pause清除了定时器");
   clearInterval(clock.timer);
   clock.title = clock.text[1];
+  clock.isPause = true;
+}
+
+function continueTimer() {
+  start();
+  clock.isPause = false;
+}
+
+function resetTimer() {
+  clear();
+  clock.isStart = false;
 }
 
 function test() {

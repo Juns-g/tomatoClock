@@ -110,7 +110,7 @@
 </template>
 
 <script setup>
-import { computed, reactive, watch } from "vue";
+import { computed, reactive, watch, watchEffect } from "vue";
 import { NButton } from "naive-ui";
 
 let clock = reactive({
@@ -161,26 +161,6 @@ let clock = reactive({
   clock.breakTotalTime = clock.breakMinuteInput * 60;
 }); */
 
-// 根据总时间计算出显示的时间
-watch(
-  () => clock.workTotalTime,
-  (newValue, oldValue) => {
-    // console.log("oldValue :>> ", oldValue);
-    // console.log("newValue :>> ", newValue);
-    // clock.hour = Math.floor(clock.workTotalTime / 3600);'
-    clock.minute = Math.floor(clock.workTotalTime / 60) % 60;
-    clock.second = pad(clock.workTotalTime % 60);
-  }
-);
-
-watch(
-  () => clock.breakTotalTime,
-  (newValue, oldValue) => {
-    clock.minute = Math.floor(clock.breakTotalTime / 60) % 60;
-    clock.second = pad(clock.breakTotalTime % 60);
-  }
-);
-
 // 使用如下的计算属性会导致一开始不显示数字，还不知道why
 /* clock.hour = computed(() => {
   Math.floor(clock.workTotalTime / 3600);
@@ -204,6 +184,19 @@ function workTotalTime2time(workTotalTime) {
 
 function workStart() {
   clock.workTotalTime = clock.workMinuteInput * 60;
+
+  // 根据总时间计算出显示的时间
+  const stopWorkWatch = watch(
+    () => clock.workTotalTime,
+    (newValue, oldValue) => {
+      // console.log("oldValue :>> ", oldValue);
+      // console.log("newValue :>> ", newValue);
+      // clock.hour = Math.floor(clock.workTotalTime / 3600);'
+      clock.minute = Math.floor(clock.workTotalTime / 60) % 60;
+      clock.second = pad(clock.workTotalTime % 60);
+    },
+    { immediate: true, deep: true }
+  );
   console.log("start清除了定时器");
   clearInterval(clock.timer);
   clock.timer = setInterval(countdown, 1000);
@@ -251,14 +244,21 @@ function beforeBreak() {
   clock.title = clock.text[3];
   clock.isStart = false;
   clock.breakStatus = true;
+  stopWorkWatch();
 }
 
 function breakTimer() {
   clock.title = clock.text[4];
+  clock.breakTotalTime = clock.breakMinuteInput * 60;
+  const stopBreakWatch = watchEffect(() => {
+    clock.minute = Math.floor(clock.breakTotalTime / 60) % 60;
+    clock.second = pad(clock.breakTotalTime % 60);
+  });
 }
 
 function breakStop() {
   clock.title = clock.text[5];
+  stopBreakWatch();
 }
 
 function test() {

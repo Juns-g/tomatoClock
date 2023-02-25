@@ -11,19 +11,27 @@
       </div>
       <div class="buttonBox">
         <el-button
-        class="startButton"
-
+          class="startButton"
           type="success"
           size="large"
-          v-show="!clock.isStart"
+          v-show="!clock.isStart && !clock.breakStatus"
           round
-          @click="start()"
+          @click="workStart()"
         >
           开 始
         </el-button>
         <el-button
-        class="pauseButton"
-
+          class="startBreakButton"
+          type="warning"
+          size="large"
+          v-show="!clock.isStart && clock.breakStatus"
+          round
+          @click="breakTimer()"
+        >
+          开 始
+        </el-button>
+        <el-button
+          class="pauseButton"
           type="success"
           size="large"
           v-show="!clock.isPause && clock.isStart"
@@ -33,8 +41,7 @@
           暂 停
         </el-button>
         <el-button
-        class="continueButton"
-
+          class="continueButton"
           type="success"
           size="large"
           v-show="clock.isPause && clock.isStart"
@@ -45,7 +52,11 @@
         </el-button>
         <el-button
           class="resetButton"
-         type="success" size="large" round @click="resetTimer()">
+          type="success"
+          size="large"
+          round
+          @click="resetTimer()"
+        >
           重 置
         </el-button>
         <!-- <el-button
@@ -74,6 +85,7 @@
           <span>专注时间: </span>
           <el-input-number
             v-model="clock.workMinuteInput"
+            :disable="clock.isNumberInput"
             size="large"
             :min="0"
             :max="60"
@@ -85,6 +97,7 @@
           <span>休息时间: </span>
           <el-input-number
             v-model="clock.breakMinuteInput"
+            :disable="clock.isNumberInput"
             size="large"
             :min="0"
             :max="30"
@@ -108,25 +121,25 @@ let clock = reactive({
   // 输入的时间
   // hourInput: 0,
   // 一次专注只准你多少分钟
-  workMinuteInput: 0,
-  breakMinuteInput: 0,
+  workMinuteInput: 0.2,
+  breakMinuteInput: 0.1,
   // secondInput: 0,
   workTotalTime: 0,
-  breakTotalTIme: 0,
+  breakTotalTime: 0,
   title: "开始专注吧",
   text: [
     "开始专注吧",
     "继续专注吧",
     "正在专注中",
-    "到了休息时间了，开始休息吧",
+    "休息时间到",
     "正在休息中",
     "休息结束了，继续专注吧",
   ],
   timer: null,
-  noInput: true,
   breakStatus: false,
   isPause: false,
   isStart: false,
+  isNumberInput: true,
 });
 
 // 根据输入的时分秒计算总时间
@@ -141,12 +154,12 @@ let clock = reactive({
 ); */
 
 // 根据输入的分钟计算总时间
-watch([() => clock.workMinuteInput, () => clock.breakMinuteInput], () => {
+/* watch([() => clock.workMinuteInput, () => clock.breakMinuteInput], () => {
   // console.log("oldValue :>> ", oldValue);
   // console.log("newValue :>> ", newValue);
   clock.workTotalTime = clock.workMinuteInput * 60;
   clock.breakTotalTime = clock.breakMinuteInput * 60;
-});
+}); */
 
 // 根据总时间计算出显示的时间
 watch(
@@ -154,14 +167,19 @@ watch(
   (newValue, oldValue) => {
     // console.log("oldValue :>> ", oldValue);
     // console.log("newValue :>> ", newValue);
-    clock.hour = Math.floor(clock.workTotalTime / 3600);
+    // clock.hour = Math.floor(clock.workTotalTime / 3600);'
     clock.minute = Math.floor(clock.workTotalTime / 60) % 60;
     clock.second = pad(clock.workTotalTime % 60);
   }
 );
 
-// 监视输入的分钟，秒的话不给改
-watch;
+watch(
+  () => clock.breakTotalTime,
+  (newValue, oldValue) => {
+    clock.minute = Math.floor(clock.breakTotalTime / 60) % 60;
+    clock.second = pad(clock.breakTotalTime % 60);
+  }
+);
 
 // 使用如下的计算属性会导致一开始不显示数字，还不知道why
 /* clock.hour = computed(() => {
@@ -184,15 +202,17 @@ function workTotalTime2time(workTotalTime) {
   clock.second = second;
 }
 
-function start() {
+function workStart() {
+  clock.workTotalTime = clock.workMinuteInput * 60;
   console.log("start清除了定时器");
   clearInterval(clock.timer);
   clock.timer = setInterval(countdown, 1000);
   if (clock.workTotalTime) {
     clock.title = clock.text[2];
   }
-  clock.isStart = true;
   console.log("start运行了，总时间是 :>> ", clock.workTotalTime);
+  clock.isStart = true;
+  clock.isNumberInput = false;
 }
 
 function clear() {
@@ -211,13 +231,34 @@ function pauseTimer() {
 }
 
 function continueTimer() {
-  start();
+  clock.timer = setInterval(countdown, 1000);
+  if (clock.workTotalTime) {
+    clock.title = clock.text[2];
+  }
+  clock.isStart = true;
   clock.isPause = false;
+  clock.isNumberInput = false;
 }
 
 function resetTimer() {
   clear();
   clock.isStart = false;
+  clock.breakStatus = false;
+  clock.isNumberInput = true;
+}
+
+function beforeBreak() {
+  clock.title = clock.text[3];
+  clock.isStart = false;
+  clock.breakStatus = true;
+}
+
+function breakTimer() {
+  clock.title = clock.text[4];
+}
+
+function breakStop() {
+  clock.title = clock.text[5];
 }
 
 function test() {
@@ -230,8 +271,13 @@ function countdown() {
   if (clock.workTotalTime < 1 && clock.timer) {
     clear();
     // TODO 停止了，处理一下
-    // if 休息状态到时间了
     // if 工作状态到时间了
+    if (!clock.breakStatus) {
+      beforeBreak();
+    } else {
+      // if 休息状态到时间了
+      clock.title = clock.text[5];
+    }
   } else {
     clock.workTotalTime--;
     console.log("时间在减少 :>> ", clock.workTotalTime);
@@ -256,17 +302,20 @@ function pad(time) {
   align-items: center;
   justify-content: center;
   height: 100%;
+  margin: auto;
   .outerBox {
     flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-direction: column;
+    margin: auto;
     border: red 2px solid;
 
     .clockBox {
       height: 300px;
       width: 300px;
+      margin: 50px 0 0 0;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -283,6 +332,11 @@ function pad(time) {
       align-items: center;
       justify-content: center;
       border: red 2px solid;
+      margin: 50px 0 0 0;
+
+      .el-button {
+        margin: 0 10px;
+      }
     }
     .inputBox {
       height: 100px;
@@ -291,7 +345,7 @@ function pad(time) {
       justify-content: center;
       flex-direction: column;
       border: red 2px solid;
-      margin: 100px 0;
+      margin: 50px 0 50px 0;
     }
   }
 }

@@ -10,6 +10,9 @@
         <n-progress
           type="circle"
           :percentage="clock.timePercentage"
+          :color="colors.orange"
+          :rail-color="colors.orangeOpacity"
+          :offset-degree="180"
           v-if="clock.isOneCircle"
           class="clockBox-timeProgress"
         >
@@ -20,6 +23,11 @@
         <n-progress
           type="multiple-circle"
           :percentage="[clock.minutePercentage, clock.secondPercentage]"
+          :color="[colors.orange, colors.lightgreen]"
+          :rail-style="[
+            { stroke: colors.orange, opacity: 0.3 },
+            { stroke: colors.lightgreen, opacity: 0.3 },
+          ]"
           v-if="!clock.isOneCircle"
           class="clockBox-timeProgress"
         >
@@ -40,7 +48,7 @@
           round
           @click="workStart()"
         >
-          开始专注
+          开 始
         </el-button>
         <el-button
           class="startBreakButton"
@@ -50,7 +58,7 @@
           round
           @click="breakTimer()"
         >
-          开始休息
+          开 始
         </el-button>
         <el-button
           class="pauseButton"
@@ -60,7 +68,7 @@
           round
           @click="pauseTimer()"
         >
-          暂停专注
+          暂 停
         </el-button>
         <el-button
           class="continueButton"
@@ -70,7 +78,7 @@
           round
           @click="continueTimer()"
         >
-          继续专注
+          继 续
         </el-button>
         <el-button
           class="resetButton"
@@ -90,7 +98,7 @@
           :min="0"
           :max="24"
         /> -->
-        <div class="workButton">
+        <div class="workTimeInput timeInput">
           <span>专注时间: </span>
           <el-input-number
             v-model="clock.workMinuteInput"
@@ -100,7 +108,7 @@
           />
           <span> min </span>
         </div>
-        <div class="breakButton">
+        <div class="breakTimeInput timeInput">
           <!-- 最多休息半小时 -->
           <span>休息时间: </span>
           <el-input-number
@@ -111,14 +119,39 @@
           />
           <span> min</span>
         </div>
+        <div class="settingsButtons">
+          <el-button
+            type="success"
+            plain
+            class="settingButton"
+            @click="clock.isOneCircle = !clock.isOneCircle"
+            >切换圆环</el-button
+          >
+          <el-button
+            type="success"
+            plain
+            class="settingButton"
+            @click="aboutClick()"
+            >关于作者</el-button
+          >
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { reactive, watchEffect } from "vue";
+import { reactive } from "vue";
 import { NProgress } from "naive-ui";
+
+let colors = {
+  red: "#ff3000",
+  orange: "#ff601a",
+  orangeOpacity: "rgba(255, 96, 26,0.3)",
+  darkgreen: "#167203",
+  lightgreen: "#5da500",
+  purple: "#6f42c1",
+};
 
 let clock = reactive({
   // 展示的时间
@@ -126,16 +159,16 @@ let clock = reactive({
   minute: 0,
   second: 0,
   timePercentage: 0,
-  minutePercentage: 50,
-  secondPercentage: 10,
+  minutePercentage: 0,
+  secondPercentage: 0,
   // 输入的时间
   // hourInput: 0,
   // 一次专注只准你多少分钟
   // 测试时间是6s
-  // workMinuteInput: 0.1,
-  // breakMinuteInput: 0.1,
-  workMinuteInput: 25,
-  breakMinuteInput: 5,
+  workMinuteInput: 1,
+  breakMinuteInput: 1,
+  // workMinuteInput: 25,
+  // breakMinuteInput: 5,
   workTotalTime: 0,
   breakTotalTime: 0,
   title: "开始专注吧",
@@ -151,7 +184,7 @@ let clock = reactive({
   breakStatus: false,
   isPause: false,
   isStart: false,
-  isOneCircle: false,
+  isOneCircle: true,
   // isNumberInput: true,
 });
 
@@ -160,6 +193,8 @@ function workStart() {
   clock.minute = Math.floor(clock.workTotalTime / 60) % 60;
   clock.second = pad(clock.workTotalTime % 60);
   clock.timePercentage = 100;
+  clock.secondPercentage = (clock.second / 60) * 100;
+  clock.minutePercentage = 100;
   clearInterval(clock.timer);
   //console.log("start清除了定时器");
   clock.timer = setInterval(countdown, 1000);
@@ -198,6 +233,11 @@ function continueTimer() {
 
 function resetTimer() {
   clear();
+  clock.timePercentage = 0;
+  clock.secondPercentage = 0;
+  clock.minutePercentage = 0;
+  clock.minute = 0;
+  clock.second = 0;
   clock.isStart = false;
   clock.breakStatus = false;
   // clock.isNumberInput = true;
@@ -215,7 +255,8 @@ function breakTimer() {
   clock.minute = Math.floor(clock.breakTotalTime / 60) % 60;
   clock.second = pad(clock.breakTotalTime % 60);
   clock.timePercentage = 100;
-  clearInterval(clock.timer);
+  clock.minutePercentage = (clock.minute / clock.breakMinuteInput) * 100;
+  clock.secondPercentage = 100;
   //console.log("breakStart清除了定时器");
   clock.timer = setInterval(breakCountdown, 1000);
   //console.log("breakStart运行了，总时间是 :>> ", clock.breakTotalTime);
@@ -232,17 +273,19 @@ function breakStop() {
 function countdown() {
   // 专注中
   clock.workTotalTime--;
-  const stopWorkWatch = watchEffect(() => {
-    clock.minute = Math.floor(clock.workTotalTime / 60) % 60;
-    clock.second = pad(clock.workTotalTime % 60);
-    clock.timePercentage =
-      (clock.workTotalTime / (clock.workMinuteInput * 60)) * 100;
-  });
-  //console.log("时间在减少 :>> ", clock.workTotalTime);
+  // const stopWorkWatch = watchEffect(() => {
+  clock.minute = Math.floor(clock.workTotalTime / 60) % 60;
+  clock.second = pad(clock.workTotalTime % 60);
+  clock.timePercentage =
+    (clock.workTotalTime / (clock.workMinuteInput * 60)) * 100;
+  clock.secondPercentage = (clock.second / 60) * 100;
+  clock.minutePercentage = (clock.minute / clock.workMinuteInput) * 100;
+  // });
+  // console.log("时间在减少 :>> ", clock.workTotalTime);
   // 专注停止
-  if (clock.workTotalTime < 1) {
+  if (clock.workTotalTime == 0) {
     clear();
-    stopWorkWatch();
+    // stopWorkWatch();
     beforeBreak();
   }
 }
@@ -251,17 +294,19 @@ function countdown() {
 function breakCountdown() {
   // 休息中
   clock.breakTotalTime--;
-  const stopBreakWatch = watchEffect(() => {
-    clock.minute = Math.floor(clock.breakTotalTime / 60) % 60;
-    clock.second = pad(clock.breakTotalTime % 60);
-    clock.timePercentage =
-      (clock.breakTotalTime / (clock.breakMinuteInput * 60)) * 100;
-  });
+  // const stopBreakWatch = watchEffect(() => {
+  clock.minute = Math.floor(clock.breakTotalTime / 60) % 60;
+  clock.second = pad(clock.breakTotalTime % 60);
+  clock.timePercentage =
+    (clock.breakTotalTime / (clock.breakMinuteInput * 60)) * 100;
+  clock.minutePercentage = (clock.minute / clock.breakMinuteInput) * 100;
+  clock.secondPercentage = (clock.second / 60) * 100;
+  // });
   //console.log("时间在减少 :>> ", clock.breakTotalTime);
   // 休息停止
-  if (clock.breakTotalTime < 1) {
+  if (clock.breakTotalTime == 0) {
     clear();
-    stopBreakWatch();
+    // stopBreakWatch();
     breakStop();
   }
 }
@@ -269,6 +314,11 @@ function breakCountdown() {
 // 补零
 function pad(time) {
   return (time < 10 ? "0" : "") + time;
+}
+
+function aboutClick() {
+  // location.href = "https://github.com/L-H-X";
+  window.open("https://github.com/L-H-X");
 }
 </script>
 
@@ -286,17 +336,17 @@ function pad(time) {
     justify-content: center;
     flex-direction: column;
     margin: auto;
-    border: red 2px solid;
+    //border: red 2px solid;
 
     .clockBox {
-      height: 300px;
-      width: 300px;
+      // height: 300px;
+      width: 400px;
       margin: 50px 0 0 0;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-direction: column;
-      border: red 2px solid;
+      //border: red 2px solid;
 
       &-title {
         font-size: 20px;
@@ -305,6 +355,7 @@ function pad(time) {
       &-timeProgress {
         margin: 20px 0 0 0;
         width: 60%;
+        height: 60%;
 
         &-time {
           font-size: 20px;
@@ -317,7 +368,7 @@ function pad(time) {
       display: flex;
       align-items: center;
       justify-content: center;
-      border: red 2px solid;
+      //border: red 2px solid;
       margin: 50px 0 0 0;
 
       .el-button {
@@ -330,8 +381,19 @@ function pad(time) {
       align-items: center;
       justify-content: center;
       flex-direction: column;
-      border: red 2px solid;
+      //border: red 2px solid;
       margin: 50px 0 50px 0;
+
+      .timeInput {
+        margin: 10px 0;
+        font-size: 16px;
+      }
+
+      .settingsButtons {
+        .settingButton {
+          margin: 5px 30px;
+        }
+      }
     }
   }
 }

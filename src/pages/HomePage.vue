@@ -2,10 +2,32 @@
   <div class="container">
     <div class="outerBox">
       <div class="clockBox">
-        <h1>{{ clock.title }}</h1>
+        <div class="clockBox-title">
+          <h1>{{ clock.title }}</h1>
+        </div>
         <!-- ! 一次学1h及以上是不正确的 -->
         <!-- <h1>{{ clock.hour }}:{{ clock.minute }}:{{ clock.second }}</h1> -->
-        <h1>{{ clock.minute }}:{{ clock.second }}</h1>
+        <n-progress
+          type="circle"
+          :percentage="clock.timePercentage"
+          v-if="clock.isOneCircle"
+          class="clockBox-timeProgress"
+        >
+          <div class="clockBox-timeProgress-time">
+            <h1>{{ clock.minute }}:{{ clock.second }}</h1>
+          </div>
+        </n-progress>
+        <n-progress
+          type="multiple-circle"
+          :percentage="[clock.minutePercentage, clock.secondPercentage]"
+          v-if="!clock.isOneCircle"
+          class="clockBox-timeProgress"
+        >
+          <div class="clockBox-timeProgress-time">
+            <h1>{{ clock.minute }}:{{ clock.second }}</h1>
+          </div>
+        </n-progress>
+
         <!--  总时间，之后删了 -->
         <!-- <h1>{{ clock.workTotalTime }}</h1> -->
       </div>
@@ -60,7 +82,7 @@
           重 置
         </el-button>
       </div>
-      <div class="inputBox">
+      <div class="settingsBox">
         <!-- ! 一次学1h及以上是不正确的 -->
         <!-- <el-input-number
           v-model="clock.hourInput"
@@ -96,12 +118,16 @@
 
 <script setup>
 import { reactive, watchEffect } from "vue";
+import { NProgress } from "naive-ui";
 
 let clock = reactive({
   // 展示的时间
   // hour: 0,
   minute: 0,
   second: 0,
+  timePercentage: 0,
+  minutePercentage: 50,
+  secondPercentage: 10,
   // 输入的时间
   // hourInput: 0,
   // 一次专注只准你多少分钟
@@ -125,6 +151,7 @@ let clock = reactive({
   breakStatus: false,
   isPause: false,
   isStart: false,
+  isOneCircle: false,
   // isNumberInput: true,
 });
 
@@ -132,6 +159,7 @@ function workStart() {
   clock.workTotalTime = clock.workMinuteInput * 60;
   clock.minute = Math.floor(clock.workTotalTime / 60) % 60;
   clock.second = pad(clock.workTotalTime % 60);
+  clock.timePercentage = 100;
   clearInterval(clock.timer);
   //console.log("start清除了定时器");
   clock.timer = setInterval(countdown, 1000);
@@ -186,6 +214,7 @@ function breakTimer() {
   clock.breakTotalTime = clock.breakMinuteInput * 60;
   clock.minute = Math.floor(clock.breakTotalTime / 60) % 60;
   clock.second = pad(clock.breakTotalTime % 60);
+  clock.timePercentage = 100;
   clearInterval(clock.timer);
   //console.log("breakStart清除了定时器");
   clock.timer = setInterval(breakCountdown, 1000);
@@ -199,11 +228,6 @@ function breakStop() {
   clock.isStart = false;
 }
 
-function test() {
-  clock.minute--;
-  //console.log(clock);
-}
-
 // 工作倒计时逻辑
 function countdown() {
   // 专注中
@@ -211,6 +235,8 @@ function countdown() {
   const stopWorkWatch = watchEffect(() => {
     clock.minute = Math.floor(clock.workTotalTime / 60) % 60;
     clock.second = pad(clock.workTotalTime % 60);
+    clock.timePercentage =
+      (clock.workTotalTime / (clock.workMinuteInput * 60)) * 100;
   });
   //console.log("时间在减少 :>> ", clock.workTotalTime);
   // 专注停止
@@ -228,6 +254,8 @@ function breakCountdown() {
   const stopBreakWatch = watchEffect(() => {
     clock.minute = Math.floor(clock.breakTotalTime / 60) % 60;
     clock.second = pad(clock.breakTotalTime % 60);
+    clock.timePercentage =
+      (clock.breakTotalTime / (clock.breakMinuteInput * 60)) * 100;
   });
   //console.log("时间在减少 :>> ", clock.breakTotalTime);
   // 休息停止
@@ -269,8 +297,18 @@ function pad(time) {
       justify-content: center;
       flex-direction: column;
       border: red 2px solid;
-      h1 {
-        font-size: 40px;
+
+      &-title {
+        font-size: 20px;
+      }
+
+      &-timeProgress {
+        margin: 20px 0 0 0;
+        width: 60%;
+
+        &-time {
+          font-size: 20px;
+        }
       }
     }
 
@@ -286,7 +324,7 @@ function pad(time) {
         margin: 0 10px;
       }
     }
-    .inputBox {
+    .settingsBox {
       height: 100px;
       display: flex;
       align-items: center;

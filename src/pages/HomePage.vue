@@ -165,10 +165,10 @@ let clock = reactive({
   // hourInput: 0,
   // 一次专注只准你多少分钟
   // 测试时间是6s
-  workMinuteInput: 1,
-  breakMinuteInput: 1,
-  // workMinuteInput: 25,
-  // breakMinuteInput: 5,
+  // workMinuteInput: 1,
+  // breakMinuteInput: 1,
+  workMinuteInput: 25,
+  breakMinuteInput: 5,
   workTotalTime: 0,
   breakTotalTime: 0,
   title: "开始专注吧",

@@ -11,6 +11,7 @@ export default defineConfig({
     port: 3333,
   },
   build: {
+    base: "./",
     // 设置最终构建的浏览器兼容目标
     target: "es2015",
     // 构建后是否生成 source map 文件

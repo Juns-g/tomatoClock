@@ -165,10 +165,11 @@ let clock = reactive({
   // hourInput: 0,
   // 一次专注只准你多少分钟
   // 测试时间是6s
-  // workMinuteInput: 1,
-  // breakMinuteInput: 1,
-  workMinuteInput: 25,
-  breakMinuteInput: 5,
+  workMinuteInput: 0.1,
+  breakMinuteInput: 0.1,
+  // 下面是正式的默认时间
+  // workMinuteInput: 25,
+  // breakMinuteInput: 5,
   workTotalTime: 0,
   breakTotalTime: 0,
   title: "开始专注吧",
@@ -190,11 +191,8 @@ let clock = reactive({
 
 function workStart() {
   clock.workTotalTime = clock.workMinuteInput * 60;
-  clock.minute = Math.floor(clock.workTotalTime / 60) % 60;
-  clock.second = pad(clock.workTotalTime % 60);
-  clock.timePercentage = 100;
-  clock.secondPercentage = (clock.second / 60) * 100;
-  clock.minutePercentage = 100;
+  changeDisplay(clock.workTotalTime, clock.workMinuteInput);
+
   clearInterval(clock.timer);
   //console.log("start清除了定时器");
   clock.timer = setInterval(countdown, 1000);
@@ -252,11 +250,7 @@ function beforeBreak() {
 function breakTimer() {
   clock.title = clock.text[4];
   clock.breakTotalTime = clock.breakMinuteInput * 60;
-  clock.minute = Math.floor(clock.breakTotalTime / 60) % 60;
-  clock.second = pad(clock.breakTotalTime % 60);
-  clock.timePercentage = 100;
-  clock.minutePercentage = (clock.minute / clock.breakMinuteInput) * 100;
-  clock.secondPercentage = 100;
+  changeDisplay(clock.breakTotalTime, clock.breakMinuteInput);
   //console.log("breakStart清除了定时器");
   clock.timer = setInterval(breakCountdown, 1000);
   //console.log("breakStart运行了，总时间是 :>> ", clock.breakTotalTime);
@@ -274,13 +268,8 @@ function countdown() {
   // 专注中
   clock.workTotalTime--;
   // const stopWorkWatch = watchEffect(() => {
-  clock.minute = Math.floor(clock.workTotalTime / 60) % 60;
-  clock.second = pad(clock.workTotalTime % 60);
-  clock.timePercentage =
-    (clock.workTotalTime / (clock.workMinuteInput * 60)) * 100;
-  clock.secondPercentage = (clock.second / 60) * 100;
-  clock.minutePercentage = (clock.minute / clock.workMinuteInput) * 100;
-  // });
+  changeDisplay(clock.workTotalTime, clock.workMinuteInput);
+
   // console.log("时间在减少 :>> ", clock.workTotalTime);
   // 专注停止
   if (clock.workTotalTime == 0) {
@@ -294,15 +283,7 @@ function countdown() {
 function breakCountdown() {
   // 休息中
   clock.breakTotalTime--;
-  // const stopBreakWatch = watchEffect(() => {
-  clock.minute = Math.floor(clock.breakTotalTime / 60) % 60;
-  clock.second = pad(clock.breakTotalTime % 60);
-  clock.timePercentage =
-    (clock.breakTotalTime / (clock.breakMinuteInput * 60)) * 100;
-  clock.minutePercentage = (clock.minute / clock.breakMinuteInput) * 100;
-  clock.secondPercentage = (clock.second / 60) * 100;
-  // });
-  //console.log("时间在减少 :>> ", clock.breakTotalTime);
+  changeDisplay(clock.breakTotalTime, clock.breakMinuteInput);
   // 休息停止
   if (clock.breakTotalTime == 0) {
     clear();
@@ -314,6 +295,15 @@ function breakCountdown() {
 // 补零
 function pad(time) {
   return (time < 10 ? "0" : "") + time;
+}
+
+// 封装改变显示的函数
+function changeDisplay(totalTime, inputTime) {
+  clock.minute = Math.floor(totalTime / 60) % 60;
+  clock.second = pad(totalTime % 60);
+  clock.timePercentage = (totalTime / (inputTime * 60)) * 100;
+  clock.minutePercentage = (clock.minute / inputTime) * 100;
+  clock.secondPercentage = (clock.second / 60) * 100;
 }
 
 function aboutClick() {
@@ -390,8 +380,10 @@ function aboutClick() {
       }
 
       .settingsButtons {
+        margin: 5px 0;
+
         .settingButton {
-          margin: 5px 30px;
+          margin: 5px 40px;
         }
       }
     }

@@ -89,60 +89,72 @@
         >
           重 置
         </el-button>
-      </div>
-      <div class="settingsBox">
-        <!-- ! 一次学1h及以上是不正确的 -->
-        <!-- <el-input-number
-          v-model="clock.hourInput"
+        <el-button
+          class="resetButton"
+          type="warning"
           size="large"
-          :min="0"
-          :max="24"
-        /> -->
-        <div class="workTimeInput timeInput">
-          <span>专注时间: </span>
-          <el-input-number
-            v-model="clock.workMinuteInput"
-            size="default"
-            :min="0"
-            :max="60"
-          />
-          <span> min </span>
-        </div>
-        <div class="breakTimeInput timeInput">
-          <!-- 最多休息半小时 -->
-          <span>休息时间: </span>
-          <el-input-number
-            v-model="clock.breakMinuteInput"
-            size="default"
-            :min="0"
-            :max="30"
-          />
-          <span> min</span>
-        </div>
-        <div class="settingsButtons">
-          <el-button
-            type="success"
-            plain
-            class="settingButton"
-            @click="clock.isOneCircle = !clock.isOneCircle"
-            >切换圆环</el-button
-          >
-          <el-button
-            type="success"
-            plain
-            class="settingButton"
-            @click="aboutClick()"
-            >关于作者</el-button
-          >
-        </div>
+          round
+          @click="isSettingsShow = true"
+        >
+          设 置
+        </el-button>
       </div>
+      <el-dialog
+        class="settingsBox"
+        v-model="isSettingsShow"
+        title="设置"
+        width="380"
+        align-center
+      >
+        <div class="settings">
+          <div class="workTimeInput timeInput">
+            <span>专注时间: </span>
+            <el-input-number
+              v-model="clock.workMinuteInput"
+              size="default"
+              :min="0"
+              :max="60"
+            />
+            <span> min </span>
+          </div>
+          <div class="breakTimeInput timeInput">
+            <!-- 最多休息半小时 -->
+            <span>休息时间: </span>
+            <el-input-number
+              v-model="clock.breakMinuteInput"
+              size="default"
+              :min="0"
+              :max="30"
+            />
+            <span> min </span>
+          </div>
+          <div class="timeInput">
+            <el-button
+              type="success"
+              plain
+              class="settingButton"
+              @click="clock.isOneCircle = !clock.isOneCircle"
+              >切换圆环</el-button
+            >
+            <el-button
+              type="success"
+              plain
+              class="settingButton"
+              @click="aboutClick()"
+              >关于作者</el-button
+            >
+          </div>
+        </div>
+      </el-dialog>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from "vue";
-import { NProgress } from "naive-ui";
+import { ref, reactive } from "vue";
+import { NProgress, NModal, NCard } from "naive-ui";
+
+let isSettingsShow = ref(false);
 
 let colors = {
   red: "#ff3000",
@@ -165,11 +177,11 @@ let clock = reactive({
   // hourInput: 0,
   // 一次专注只准你多少分钟
   // 测试时间是6s
-  workMinuteInput: 0.1,
-  breakMinuteInput: 0.1,
+  // workMinuteInput: 0.1,
+  // breakMinuteInput: 0.1,
   // 下面是正式的默认时间
-  // workMinuteInput: 25,
-  // breakMinuteInput: 5,
+  workMinuteInput: 25,
+  breakMinuteInput: 5,
   workTotalTime: 0,
   breakTotalTime: 0,
   title: "开始专注吧",
@@ -186,7 +198,12 @@ let clock = reactive({
   isPause: false,
   isStart: false,
   isOneCircle: true,
+
   // isNumberInput: true,
+});
+
+const modelStyle = reactive({
+  width: "400px",
 });
 
 function workStart() {
@@ -317,6 +334,10 @@ function playMusic(name) {
   const audio = new Audio("/src/assets/audios/" + name + ".mp3");
   audio.play();
 }
+
+function changeSettingsShow() {
+  isSettingsShow.value = !clock.isSettingsShow.value;
+}
 </script>
 
 <style lang="scss" scoped>
@@ -372,28 +393,26 @@ function playMusic(name) {
         margin: 0 10px;
       }
     }
-    .settingsBox {
-      height: 100px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      //border: red 2px solid;
-      margin: 50px 0 50px 0;
 
+    .settings {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
       .timeInput {
         margin: 10px 0;
         font-size: 16px;
       }
-
-      .settingsButtons {
-        margin: 5px 0;
-
-        .settingButton {
-          margin: 5px 40px;
-        }
+      .settingButton {
+        margin: 5px 40px;
       }
     }
   }
+}
+</style>
+
+<style>
+.el-dialog {
+  border-radius: 8px !important;
 }
 </style>

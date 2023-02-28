@@ -8,7 +8,7 @@ export default defineConfig({
     hmr: true,
     open: true,
     cors: true,
-    port: 3333,
+    port: 3080,
   },
   build: {
     base: "./",

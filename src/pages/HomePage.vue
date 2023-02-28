@@ -141,7 +141,7 @@
 </template>
 
 <script setup>
-import { reactive } from "vue";
+import { ref, reactive, onMounted } from "vue";
 import { NProgress } from "naive-ui";
 
 let colors = {
@@ -245,6 +245,7 @@ function beforeBreak() {
   clock.title = clock.text[3];
   clock.isStart = false;
   clock.breakStatus = true;
+  playMusic("黑莓短信");
 }
 
 function breakTimer() {
@@ -309,6 +310,12 @@ function changeDisplay(totalTime, inputTime) {
 function aboutClick() {
   // location.href = "https://github.com/L-H-X";
   window.open("https://github.com/L-H-X");
+}
+
+// 音乐播放
+function playMusic(name) {
+  const audio = new Audio("/src/assets/audios/" + name + ".mp3");
+  audio.play();
 }
 </script>
 
